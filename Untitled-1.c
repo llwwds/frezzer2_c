@@ -98,8 +98,8 @@ void sort_food_list(frezzer* f) {  //对冰柜中的食物按照体积进行 降
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-void show_first_menu(){
-    printf("+-----------------+-----------------+\n");
+void show_first_menu(){  // 显示一级菜单(仓库们)
+    printf("+-----------------+-----------------+1\n");
     warehouse_number=0;
     int max_warehouse_number=0;
     DIR *dir = opendir("data"); // 打开data目录，DIR为读取文件用的数据类型，若失败则返回NULL
@@ -117,20 +117,19 @@ void show_first_menu(){
                 char path[512];  // 规定拼路径时的缓冲区长度
                 snprintf(path, sizeof(path), "data/%s", temp->d_name);  // 用temp指向的文件的名字，拼出完整的文件相对路径
                 if(stat(path, &buf) == 0 && S_ISDIR(buf.st_mode)){  // 若为目标路径位置的文件为文件夹，则打印
-                    printf("| %-18s | %-18s |\n",temp->d_name,"");
+                    printf(" %-18s\n",temp->d_name,"");
                     warehouse_number++;
                 }
             }
         }
         closedir(dir);
     }
-    printf("+-----------------+-----------------+\n");
+    printf("+-----------------+-----------------+1\n");
 }
 
-void show_second_menu(char file_path[]){  // 显示二级菜单，传入拼好的文件路径（到仓库，不到每一个冰柜）
-    printf("+-----------------+-----------------+\n");
-    frezzer_number=0;
-    int max_frezzer_number=0;
+void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰柜们)，传入拼好的文件路径（到仓库，不到每一个冰柜）
+    printf("+-----------------+-----------------+2\n");
+    frezzer_number=0;  // 冰柜数量计数器清零，接下来重新计数
     DIR *dir = opendir(file_path);  // 打开文件夹，新建一个文件夹指针dir指向打开的文件夹用于后续操作，若失败则返回NULL
     if(dir==NULL){
         printf("Error: Failed to open directory %s.\n",file_path);
@@ -146,18 +145,18 @@ void show_second_menu(char file_path[]){  // 显示二级菜单，传入拼好�
                 struct stat buf;
                 snprintf(path, sizeof(path), "%s/%s", file_path, temp->d_name);  // 用temp指向的文件的名字，拼出完整的文件相对路径
                 if(stat(path, &buf) == 0 && strlen(path) >= 4 && strncmp(path + strlen(path) - 4, ".txt", 4) == 0){  // 若为目标路径位置的文件为txt，则打印
-                    printf("| %-18s | %-18s |\n",temp->d_name,"");
+                    printf(" %-18s\n",temp->d_name);
                     frezzer_number++;
                 }
             }
         }
     }
     closedir(dir);
-    printf("+-----------------+-----------------+\n");
+    printf("+-----------------+-----------------+2\n");
 }
 
-void show_third_menu(char file_path[]){  // 显示三级菜单，传入拼好的文件路径（到每一个冰柜）
-    printf("+-----------------+-----------------+\n");
+void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食物们)，传入拼好的文件路径（到每一个冰柜）
+    printf("+-----------------+-----------------+3\n");
     FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
     if(file==NULL){
         printf("Error: Failed to open file %s.\n",file_path);
@@ -173,26 +172,32 @@ void show_third_menu(char file_path[]){  // 显示三级菜单，传入拼好的
         char temp_type[100];
         int temp_vol;
         int temp_temp;
-
-        while(fscanf(file, "%s %s %d %d\n", temp_name, temp_type, &temp_vol, &temp_temp) == 4){  // 从文件中读取数据，直到读完，读的内容存入4个临时变量中
+        // txt文件内顺序：名称 种类 体积 温度
+        while(fscanf(file, "%s %s %d %d", temp_name, temp_type, &temp_vol, &temp_temp) == 4){  // 从文件中读取数据，直到读完，读的内容存入4个临时变量中
             node* temp = create_node(&(f.head), &(f.tail));  // 新建节点并尾插
             init_node(temp, temp_name, temp_type, temp_vol, temp_temp, NULL); // 初始化节点，将临时变量中的数据存入节点中
 
-            if(lowest_temperature > temp->data.food_temperature){  // 计算最低温度
-                lowest_temperature = temp->data.food_temperature;
+                if(lowest_temperature > temp->data.food_temperature){  // 计算最低温度
+                    lowest_temperature = temp->data.food_temperature;
+                }
+                used_volume += temp->data.food_volume;  // 计算已用体积
             }
-            used_volume += temp->data.food_volume;  // 计算已用体积
-        }
         sort_food_list(&f);  // 对冰柜中的食物按照体积进行 降序排序
-        f.frezzer_available_volume-=used_volume;  // 计算可用体积
-        f.frezzer_temperature=lowest_temperature;  // 计算最低温度
+        f.frezzer_available_volume-=used_volume;  // 更新可用体积
+        f.frezzer_temperature=lowest_temperature;  // 更新最低温度
+
+        for(node*temp=f.head;temp!=NULL;temp=temp->next){  // 遍历链表，打印每个节点的数据
+            printf("| %-18s | %-18s | %-18d | %-18d |\n",temp->data.food_name,temp->data.food_type,temp->data.food_volume,temp->data.food_temperature);
+        }
     }
     fclose(file);
-    printf("+-----------------+-----------------+-----------------+\n");
+    printf("+-----------------+-----------------+3\n");
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 int main(){
     show_first_menu();
+    show_second_menu("data/warehouse1");
+    show_third_menu("data/warehouse1/frezzer1.txt");  // D:\1暂存来自桌面的文件\trae_file\frezzer2_c\data\warehouse1\frezzer1.txt
     return 0;
 }
