@@ -1,4 +1,4 @@
-﻿#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
@@ -162,9 +162,10 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
                 snprintf(path, sizeof(path), "%s/%s", file_path, temp->d_name);  // 用temp指向的文件的名字，拼出完整的文件相对路径
                 if(stat(path, &buf) == 0 && strlen(path) >= 4 && strncmp(path + strlen(path) - 4, ".txt", 4) == 0){  // 若为目标路径位置的文件为txt，则打印
                     printf(" %-18s\n",temp->d_name);
-                    frezzer_number++;
+                    frezzer_number = (frezzer_number > atoi(temp->d_name+7)) ? frezzer_number : atoi(temp->d_name+7);  // 保证仓库编号计数器始终是所有仓库中编号最大的+1
                 }
             }
+            frezzer_number++;
         
     }
     closedir(dir);
@@ -180,16 +181,16 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
 }
 
 void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食物们)，传入拼好的文件路径（到每一个冰柜）
-    printf("======================================\n");
-    printf("           [ Third menu ]             \n");
-    printf("+-----------------+-----------------+3\n");
     FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
     if(file==NULL){
         printf("Error: Failed to open file %s.\n",file_path);
         menu_state=second;  // 把”当前菜单“改回二级菜单
         return;
     }
-    else{
+    printf("======================================\n");
+    printf("           [ Third menu ]             \n");
+    printf("+-----------------+-----------------+3\n");
+    
         frezzer f;
         init_frezzer(&f);  // 初始化frezzer
         int lowest_temperature=10;
@@ -216,7 +217,7 @@ void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食�
         for(node*temp=f.head;temp!=NULL;temp=temp->next){  // 遍历链表，打印每个节点的数据
             printf("| %-18s | %-18s | %-18d | %-18d |\n",temp->data.food_name,temp->data.food_type,temp->data.food_volume,temp->data.food_temperature);
         }
-    }
+    
     fclose(file);
     printf("+-----------------+-----------------+3\n");
     printf("\n");
@@ -234,8 +235,8 @@ int main(){
     int choice = 0;  // 记录用户输入的选项
     // -1退出 0打开 1新建 2删除 ，操作时输入编号然后拼出路径进行文件操作
 
-    char target_warehouse_path[600];  // 记录当前选中的仓库路径,例："data/warehouse1"
-    char target_freezer_path[600];  // 记录当前选中的冰柜文件路径，例："data/warehouse1/frezzer1.txt"
+    char target_warehouse_path[600] = "";  // 记录当前选中的仓库路径,例："data/warehouse1"
+    char target_freezer_path[600] = "";  // 记录当前选中的冰柜文件路径，例："data/warehouse1/frezzer1.txt"
     
     while(1){
         if(menu_state==third){show_third_menu(target_freezer_path);}  // 先显示菜单界面，等用户输入指令
@@ -308,16 +309,26 @@ int main(){
         else if(menu_state==second){  // 如果当前在二级菜单
             if(choice==-1){  // 返回一级菜单
                 menu_state=firest;
+                sprintf(target_warehouse_path, "");
             }
             else if(choice==0){  // 打开一个冰柜
                 printf("Please enter the number");
                 int number;  // 承接输入的编号，稍后用于拼接
                 scanf("%d",&number);
-                sprintf(target_warehouse_path, target_warehouse_path, "/frezzer" ,number,".txt");  // 拼出目标文件夹的路径
+                sprintf(target_freezer_path, "%s/frezzer%d.txt", target_warehouse_path, number);  // 拼出目标文件夹的路径
                 menu_state=third;
             }
             else if(choice==1){  // 新建一个冰柜
-                
+                char temp_path[600];
+                sprintf(temp_path, "%s/frezzer%d.txt", target_warehouse_path, frezzer_number);  // 拼出目标文件夹的路径
+                FILE *file = fopen(temp_path, "w");
+                if(file==NULL){
+                    printf("Failed to create the frezzer\n");
+                }
+                else{
+                    fclose(file);
+                    printf("Done\n");
+                }
             }
             else if(choice==2){  // 删除一个冰柜
                 
@@ -330,6 +341,7 @@ int main(){
         else if(menu_state==third){  // 如果当前在三级菜单
             if(choice==-1){  // 返回二级菜单
                 menu_state=second;
+                sprintf(target_freezer_path, "");
             }
             else if(choice==0){}
             else if(choice==1){}
