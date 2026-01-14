@@ -331,7 +331,18 @@ int main(){
                 }
             }
             else if(choice==2){  // 删除一个冰柜
-                
+                printf("Please enter the number");
+                int number;  // 承接输入的编号，稍后用于拼接
+                scanf("%d",&number);
+                char temp_path[600];  // 临时承接要删除的冰柜路径
+                sprintf(temp_path,"%s/frezzer%d.txt",target_warehouse_path, number);  // 拼出目标冰柜的路径
+
+                if(remove(temp_path)==0){
+                    printf("Done");
+                }
+                else{
+                    printf("Error: failed to delete frezzer\n");
+                }
             }
             else{
                 printf("he yi wei ?");  // 若输入非法内容，则报错
