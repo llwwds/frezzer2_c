@@ -7,6 +7,9 @@
 
 int warehouse_number = 0;  // 全局变量：仓库数量，用于生成新仓库的命名编号
 int frezzer_number = 0;  // 全局变量：冷冻器数量，用于生成新冰柜的命名编号
+
+enum menu{firest,second,third};  // 定义枚举类型，用于记录现在要显示哪个界面
+enum menu menu_state=firest;  // 记录当前页面，刚进入程序默认为一级菜单
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
 typedef struct food {  // 食物信息
     char food_name[100];  // 食物名称，最大长度99个字符
@@ -133,6 +136,7 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
     DIR *dir = opendir(file_path);  // 打开文件夹，新建一个文件夹指针dir指向打开的文件夹用于后续操作，若失败则返回NULL
     if(dir==NULL){
         printf("Error: Failed to open directory %s.\n",file_path);
+        menu_state=firest;  // 把”当前菜单“改回一级菜单
         return;
     }
     else{
@@ -160,6 +164,7 @@ void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食�
     FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
     if(file==NULL){
         printf("Error: Failed to open file %s.\n",file_path);
+        menu_state=second;  // 把”当前菜单“改回二级菜单
         return;
     }
     else{
@@ -193,11 +198,64 @@ void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食�
     fclose(file);
     printf("+-----------------+-----------------+3\n");
 }
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 int main(){
-    show_first_menu();
-    show_second_menu("data/warehouse1");
-    show_third_menu("data/warehouse1/frezzer1.txt");  // D:\1暂存来自桌面的文件\trae_file\frezzer2_c\data\warehouse1\frezzer1.txt
+    
+    int choice = 0;  // 记录用户输入的选项
+    // -1退出 0打开 1新建 2删除 ，操作时输入编号然后拼出路径进行文件操作
+
+    char target_warehouse_path[600];  // 记录当前选中的仓库路径,例："data/warehouse1"
+    char target_freezer_path[600];   // 记录当前选中的冰柜文件路径，例："data/warehouse1/frezzer1.txt"
+    
+    while(1){
+        if(menu_state==third){show_third_menu(target_freezer_path);}  // 先显示菜单界面，等用户输入指令
+        else if(menu_state==second){show_second_menu(target_warehouse_path);}
+        else {show_first_menu();}  // 遇事不决，显示主菜单,不能出了问题就什么都不显示
+
+        scanf("%d",&choice);
+
+        if(menu_state==firest){  // 如果当前在一级菜单
+
+            if(choice==-1){  // 一级菜单-退出程序
+                break;
+            }
+
+            else if(choice==0){
+                printf("Please enter the number");
+                int number;  // 承接输入的编号，稍后用于拼接
+                scanf("%d",&number);
+                sprintf(target_warehouse_path, "data/warehouse%d", number);  // 拼出目标文件夹的路径
+                menu_state=second;
+                show_second_menu(target_warehouse_path);
+            }
+            else if(choice==1){}
+            else if(choice==2){}
+            else{
+                printf("he yi wei ?");  // 若输入非法内容，则报错
+            }
+        }
+
+        else if(menu_state==second){  // 如果当前在二级菜单
+            if(choice==-1){}
+            else if(choice==0){}
+            else if(choice==1){}
+            else if(choice==2){}
+            else{
+                printf("he yi wei ?");  // 若输入非法内容，则报错
+            }
+        }
+        
+        else if(menu_state==third){  // 如果当前在三级菜单
+            if(choice==-1){}
+            else if(choice==0){}
+            else if(choice==1){}
+            else if(choice==2){}
+            else{
+                printf("he yi wei ?");  // 若输入非法内容，则报错
+            }
+        }
+    }
     return 0;
 }
