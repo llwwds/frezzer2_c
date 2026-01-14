@@ -102,6 +102,8 @@ void sort_food_list(frezzer* f) {  //对冰柜中的食物按照体积进行 降
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void show_first_menu(){  // 显示一级菜单(仓库们)
+    printf("======================================\n");
+    printf("           [ First menu ]             \n");
     printf("+-----------------+-----------------+1\n");
     warehouse_number=0;
     int max_warehouse_number=0;
@@ -128,9 +130,18 @@ void show_first_menu(){  // 显示一级菜单(仓库们)
         closedir(dir);
     }
     printf("+-----------------+-----------------+1\n");
+    printf("\n");
+    printf("Enter -1 to exit\n");
+    printf("Enter 0  to open a warehouse\n");
+    printf("Enter 1  to create a new warehouse\n");
+    printf("Enter 2  to delete a warehouse\n");
+    printf("\n");
+    printf("======================================\n");
 }
 
 void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰柜们)，传入拼好的文件路径（到仓库，不到每一个冰柜）
+    printf("======================================\n");
+    printf("          [ Second menu ]             \n");
     printf("+-----------------+-----------------+2\n");
     frezzer_number=0;  // 冰柜数量计数器清零，接下来重新计数
     DIR *dir = opendir(file_path);  // 打开文件夹，新建一个文件夹指针dir指向打开的文件夹用于后续操作，若失败则返回NULL
@@ -157,9 +168,18 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
     }
     closedir(dir);
     printf("+-----------------+-----------------+2\n");
+    printf("\n");
+    printf("Enter -1 to back to the first menu\n");
+    printf("Enter 0  to open a frezzer\n");
+    printf("Enter 1  to create a new frezzer\n");
+    printf("Enter 2  to delete a frezzer\n");
+    printf("\n");
+    printf("======================================\n");
 }
 
 void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食物们)，传入拼好的文件路径（到每一个冰柜）
+    printf("======================================\n");
+    printf("           [ Third menu ]             \n");
     printf("+-----------------+-----------------+3\n");
     FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
     if(file==NULL){
@@ -197,6 +217,13 @@ void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食�
     }
     fclose(file);
     printf("+-----------------+-----------------+3\n");
+    printf("\n");
+    printf("Enter -1 to back to the second menu\n");
+    printf("Enter 0  to subscribe llwwds on github\n");
+    printf("Enter 1  to add a new food\n");
+    printf("Enter 2  to delete a food\n");
+    printf("\n");
+    printf("======================================\n");
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -228,7 +255,6 @@ int main(){
                 scanf("%d",&number);
                 sprintf(target_warehouse_path, "data/warehouse%d", number);  // 拼出目标文件夹的路径
                 menu_state=second;
-                show_second_menu(target_warehouse_path);
             }
             else if(choice==1){}
             else if(choice==2){}
