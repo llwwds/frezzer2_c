@@ -6,7 +6,7 @@
 #include <direct.h>
 
 int warehouse_number = 0;  // 全局变量：仓库数量，用于生成新仓库的命名编号
-int frezzer_number = 0;  // 全局变量：冷冻器数量，用于生成新冰柜的命名编号
+int frezzer_number = 0;  // 全局变量：冰柜数量，用于生成新冰柜的命名编号
 
 enum menu{firest,second,third};  // 定义枚举类型，用于记录现在要显示哪个界面
 enum menu menu_state=firest;  // 记录当前页面，刚进入程序默认为一级菜单
@@ -123,11 +123,13 @@ void show_first_menu(){  // 显示一级菜单(仓库们)
                 snprintf(path, sizeof(path), "data/%s", temp->d_name);  // 用temp指向的文件的名字，拼出完整的文件相对路径
                 if(stat(path, &buf) == 0 && S_ISDIR(buf.st_mode)){  // 若为目标路径位置的文件为文件夹，则打印
                     printf(" %-18s\n",temp->d_name,"");
-                    warehouse_number++;
+                    warehouse_number = (warehouse_number > atoi(temp->d_name+9)) ? warehouse_number : atoi(temp->d_name+9);  // 保证仓库编号计数器始终是所有仓库中编号最大的+1
+                    // atoi可以将字符串转为数字，d_name+9是因为本质上字符串是数组，字符串名是指针，指针+9就是访问第9位
                 }
             }
         }
         closedir(dir);
+        warehouse_number++;
     }
     printf("+-----------------+-----------------+1\n");
     printf("\n");
@@ -140,9 +142,6 @@ void show_first_menu(){  // 显示一级菜单(仓库们)
 }
 
 void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰柜们)，传入拼好的文件路径（到仓库，不到每一个冰柜）
-    printf("======================================\n");
-    printf("          [ Second menu ]             \n");
-    printf("+-----------------+-----------------+2\n");
     frezzer_number=0;  // 冰柜数量计数器清零，接下来重新计数
     DIR *dir = opendir(file_path);  // 打开文件夹，新建一个文件夹指针dir指向打开的文件夹用于后续操作，若失败则返回NULL
     if(dir==NULL){
@@ -150,7 +149,9 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
         menu_state=firest;  // 把”当前菜单“改回一级菜单
         return;
     }
-    else{
+    printf("======================================\n");
+    printf("          [ Second menu ]             \n");
+    printf("+-----------------+-----------------+2\n");
         for(struct dirent *temp=readdir(dir);temp!=NULL;temp=readdir(dir)){  // 若能打开，则开始遍历文件夹内，查找txt文件
             if(strcmp(temp->d_name,".")==0||strcmp(temp->d_name,"..")==0){  // 若文件名显示为当前目录或上一级目录，则跳过
                 continue;
@@ -164,7 +165,7 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
                     frezzer_number++;
                 }
             }
-        }
+        
     }
     closedir(dir);
     printf("+-----------------+-----------------+2\n");
@@ -175,6 +176,7 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
     printf("Enter 2  to delete a frezzer\n");
     printf("\n");
     printf("======================================\n");
+    return ;
 }
 
 void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食物们)，传入拼好的文件路径（到每一个冰柜）
@@ -227,14 +229,13 @@ void show_third_menu(char file_path[]){  // 显示三级菜单(冰柜内的食�
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------
 int main(){
     
     int choice = 0;  // 记录用户输入的选项
     // -1退出 0打开 1新建 2删除 ，操作时输入编号然后拼出路径进行文件操作
 
     char target_warehouse_path[600];  // 记录当前选中的仓库路径,例："data/warehouse1"
-    char target_freezer_path[600];   // 记录当前选中的冰柜文件路径，例："data/warehouse1/frezzer1.txt"
+    char target_freezer_path[600];  // 记录当前选中的冰柜文件路径，例："data/warehouse1/frezzer1.txt"
     
     while(1){
         if(menu_state==third){show_third_menu(target_freezer_path);}  // 先显示菜单界面，等用户输入指令
@@ -249,32 +250,87 @@ int main(){
                 break;
             }
 
-            else if(choice==0){
+            else if(choice==0){  // 打开二级菜单
                 printf("Please enter the number");
                 int number;  // 承接输入的编号，稍后用于拼接
                 scanf("%d",&number);
                 sprintf(target_warehouse_path, "data/warehouse%d", number);  // 拼出目标文件夹的路径
                 menu_state=second;
             }
-            else if(choice==1){}
-            else if(choice==2){}
+            else if(choice==1){  // 新建一个文件夹
+                char temp_path[600];
+                sprintf(temp_path, "data/warehouse%d", warehouse_number);  // 拼出目标文件夹的路径
+                int temp = mkdir(temp_path);
+                if(temp==0){
+                    printf("Done\n");
+                }
+                else{
+                    printf("Failed to create a new warehouse\n");
+                }
+            }
+            else if(choice==2){  // 删除一个文件夹
+                printf("Please enter the number");
+                int number;  // 承接输入的编号，稍后用于拼接
+                scanf("%d",&number);
+                char temp_path[600];  // 临时承接要删除的文件夹的路径
+                sprintf(temp_path, "data/warehouse%d", number);  // 拼出目标文件夹的路径
+
+                struct stat st;
+                if(stat(temp_path,&st)==0&&S_ISDIR(st.st_mode)){  // 检查目标路径位置是否打开成功，若是则判断是不是一个文件夹，全满足才下一步
+                    DIR *dir=opendir(temp_path);  // rmdir只能删除空文件夹，故只能打开文件夹删除里面的所有文件然后再删文件夹
+                    if(dir==NULL){
+                        printf("The warehouse is not exist\n");
+                        continue;
+                    }
+                    for(struct dirent *temp=readdir(dir);temp!=NULL;temp=readdir(dir)){
+                        if(strcmp(temp->d_name,".")==0||strcmp(temp->d_name,"..")==0){
+                            continue;
+                        }
+                        else{
+                            char temp_frezzer_path[600];  // 接下来要删除的frezzer的文件路径
+                            snprintf(temp_frezzer_path, sizeof(temp_frezzer_path), "%s/%s", temp_path, temp->d_name);  // 拼出文件夹中的一个frezzer的路径，接下来删除它
+                            remove(temp_frezzer_path);
+                        }
+                    }
+                    closedir(dir);
+                    rmdir(temp_path);
+                }
+                else{
+                    printf("The warehouse is not exist\n");
+                }
+                
+            }
             else{
                 printf("he yi wei ?");  // 若输入非法内容，则报错
             }
         }
 
         else if(menu_state==second){  // 如果当前在二级菜单
-            if(choice==-1){}
-            else if(choice==0){}
-            else if(choice==1){}
-            else if(choice==2){}
+            if(choice==-1){  // 返回一级菜单
+                menu_state=firest;
+            }
+            else if(choice==0){  // 打开一个冰柜
+                printf("Please enter the number");
+                int number;  // 承接输入的编号，稍后用于拼接
+                scanf("%d",&number);
+                sprintf(target_warehouse_path, target_warehouse_path, "/frezzer" ,number,".txt");  // 拼出目标文件夹的路径
+                menu_state=third;
+            }
+            else if(choice==1){  // 新建一个冰柜
+                
+            }
+            else if(choice==2){  // 删除一个冰柜
+                
+            }
             else{
                 printf("he yi wei ?");  // 若输入非法内容，则报错
             }
         }
         
         else if(menu_state==third){  // 如果当前在三级菜单
-            if(choice==-1){}
+            if(choice==-1){  // 返回二级菜单
+                menu_state=second;
+            }
             else if(choice==0){}
             else if(choice==1){}
             else if(choice==2){}
