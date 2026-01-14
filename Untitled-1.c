@@ -43,36 +43,34 @@ typedef struct frezzer {  // 冰柜信息
     int frezzer_temperature;  // 冰柜的温度
     int frezzer_available_volume;  // 冰柜的可用容积
 } frezzer;
-/*
 void init_frezzer(frezzer* f) {  // 给frezzer赋初值
     f->head = NULL;
     f->tail = NULL;
     f->frezzer_temperature = 10;
     f->frezzer_available_volume = 100;
 }
-*/
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
 // food无构造函数，node有有参数的构造函数，frezzer有有参数的构造函数
 // node有析构函数，其余均无
 
-node* create_node(node** head, node** tail) {  //新建链节并尾插，传入head和tail的二级指针
+node* create_node(frezzer* f) {  //新建链节并尾插，传入frezzer的指针
     node* temp = (node*)malloc(sizeof(node)); // 新建节点
 
-    if (*head == NULL) {
+    if (f->head == NULL) {
         // 如果链表为空，head和tail指向新节点
-        *head = temp;
-        *tail = temp;
+        f->head = temp;
+        f->tail = temp;
     } else {
         // 若链表不空，则尾插，并更新tail
-        (*tail)->next = temp;
-        *tail = temp;
+        (f->tail)->next = temp;
+        f->tail = temp;
     }
 
     return temp;  // 返回指向新节点的指针
 }
 
-int delete_food(frezzer* f, char food_name[]){
+int delete_food(frezzer* f, char food_name[]) {
     node* current = f->head;
     node* prev = NULL;
     while(current != NULL){
@@ -82,7 +80,7 @@ int delete_food(frezzer* f, char food_name[]){
             } else {
                 prev->next = current->next;
             }
-            if(current == f->tail){
+                if(current == f->tail){
                 f->tail = prev;
             }
             free(current);
@@ -108,7 +106,7 @@ int cmp(const void *a, const void *b) {  // qsort排序单链表用的排序函�
     return food_b->food_volume - food_a->food_volume; // 降序排序
 }
 
-void sort_food_list(frezzer* f) {  //对冰柜中的食物按照体积进行 降序排序 传入指向冰柜变量的指针
+void sort_food_list(frezzer *f) {  //对冰柜中的食物按照体积进行 降序排序 传入指向冰柜变量的指针
     if (f->head == NULL || f->head->next == NULL) return; // 若为空链表/单节点，不用排序
 
     food temp_data[100];  // 暂时记录链表中全部数据
@@ -237,7 +235,8 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
         int temp_temp;
         // txt文件内顺序：名称 种类 体积 温度
         while(fscanf(file, "%s %s %d %d", temp_name, temp_type, &temp_vol, &temp_temp) == 4){  // 从文件中读取数据，直到读完，读的内容存入4个临时变量中
-            node* temp = create_node(&(f->head), &(f->tail));  // 新建节点并尾插
+            if(temp_vol <= f->frezzer_available_volume){  // 若食物体积小于等于可用体积
+                node* temp = create_node(f);  // 新建节点并尾插
             init_node(temp, temp_name, temp_type, temp_vol, temp_temp, NULL); // 初始化节点，将临时变量中的数据存入节点中
 
                 if(lowest_temperature > temp->data.food_temperature){  // 计算最低温度
@@ -245,6 +244,7 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
                 }
                 used_volume += temp->data.food_volume;  // 计算已用体积
             }
+        }
         sort_food_list(f);  // 对冰柜中的食物按照体积进行 降序排序
         f->frezzer_available_volume-=used_volume;  // 更新可用体积
         f->frezzer_temperature=lowest_temperature;  // 更新最低温度
@@ -386,7 +386,6 @@ int main(){
        if(choice==-1){  // 返回二级菜单
                 menu_state=second;
                 free_list(&f);
-            }//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             }
             else if(choice==0){  // 彩蛋
                 printf("Really ?\n");
@@ -405,15 +404,19 @@ int main(){
                 scanf("%d",&temp_food_volume);  // 输入食物体积
                 printf("Please enter the temperature of the food");
                 scanf("%d",&temp_food_temperature);  // 输入食物保存的温度
-
-                FILE *file = fopen(target_freezer_path, "a");  // 以追加模式打开冰柜文件
-                if(file==NULL){
-                    printf("Failed to open the frezzer\n");
+                if(temp_food_volume > f.frezzer_available_volume){  // 检查食物体积是否超过可用体积
+                    printf("Error: The food is too large to put in the frezzer\n");
                 }
                 else{
-                    fprintf(file, "%s %s %d %d\n", temp_food_name, temp_food_type, temp_food_volume, temp_food_temperature);// 写入食物信息到文件
-                    fclose(file);
-                    printf("Done\n");
+                    FILE *file = fopen(target_freezer_path, "a");  // 以追加模式打开冰柜文件
+                    if(file==NULL){
+                        printf("Failed to open the frezzer\n");
+                    }
+                    else{
+                        fprintf(file, "%s %s %d %d\n", temp_food_name, temp_food_type, temp_food_volume, temp_food_temperature);// 写入食物信息到文件
+                        fclose(file);
+                        printf("Done\n");
+                    }
                 }
             }
             else if(choice==2){  // 删除食物
