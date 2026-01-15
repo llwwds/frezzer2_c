@@ -43,6 +43,7 @@ typedef struct frezzer {  // 冰柜信息
     int frezzer_temperature;  // 冰柜的温度
     int frezzer_available_volume;  // 冰柜的可用容积
 } frezzer;
+
 void init_frezzer(frezzer* f) {  // 给frezzer赋初值
     f->head = NULL;
     f->tail = NULL;
@@ -260,9 +261,10 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
     printf("+-----------------+-----------------+3\n");
     printf("\n");
     printf("Enter -1 to back to the second menu\n");
-    printf("Enter 0  to subscribe llwwds on github\n");
+    printf("Enter 0  to modify a food\n");
     printf("Enter 1  to add a new food\n");
     printf("Enter 2  to delete a food\n");
+    printf("Enter 3  to subscribe llwwds on github\n");
     printf("\n");
     printf("======================================\n");
 }
@@ -406,9 +408,71 @@ int main(){
                 menu_state=second;
                 free_list(&f);
             }
-            else if(choice==0){  // 彩蛋
-                printf("Really ?\n");
-                printf("Thankyou so much for your star and subscribe me on github !\n");
+            else if(choice==0){  // 修改食物信息
+                char target_name[100];
+                printf("Please enter the name of the food");
+                scanf("%s", target_name);
+
+                node* current = f.head;
+                int found = 0;
+                while(current != NULL){
+                    if(strcmp(current->data.food_name, target_name) == 0){
+                        found = 1;
+                        break;
+                    }
+                    current = current->next;
+                }
+
+                if(!found){
+                    printf("Error: Food not found!\n");
+                } else {
+                    char new_name[100];
+                    char new_type[100];
+                    int new_vol;
+                    int new_temp;
+
+                    printf("Please enter the new name");
+                    scanf("%s", new_name);
+                    printf("Please enter the new type");
+                    scanf("%s", new_type);
+                    printf("Please enter the new volume");
+                    scanf("%d", &new_vol);
+                    printf("Please enter the new temperature");
+                    scanf("%d", &new_temp);
+
+                    if(new_temp < -20 || new_temp > 10){
+                        printf("Error: Temperature out of range! (-20 ~ 10)\n");
+                    } else if (f.frezzer_available_volume + current->data.food_volume < new_vol) {
+                        printf("Error: The food is too large to put in the frezzer\n");
+                    } else {
+                        // 更新内存数据
+                        f.frezzer_available_volume += current->data.food_volume; // 归还旧体积
+                        f.frezzer_available_volume -= new_vol; // 减去新体积
+                        
+                        strcpy(current->data.food_name, new_name);  // 给当前节点的食物名称赋值为新名称
+                        strcpy(current->data.food_type, new_type);  // 给当前节点的食物种类赋值为新种类
+                        current->data.food_volume = new_vol;  // 给当前节点的食物体积赋值为新体积
+                        current->data.food_temperature = new_temp;  // 给当前节点的食物温度赋值为新温度
+
+                        // 更新文件
+                        FILE *file = fopen(target_freezer_path, "w");
+                        if(file == NULL) {
+                            printf("Error: Failed to update the frezzer file\n");
+                        } else {
+                            node* temp = f.head;
+                            while(temp != NULL) {
+                                fprintf(file, "%s %s %d %d\n", 
+                                   temp->data.food_name, 
+                                   temp->data.food_type, 
+                                   temp->data.food_volume, 
+                                   temp->data.food_temperature);
+                                temp = temp->next;
+                            }
+                            fclose(file);
+                            printf("Done\n");
+                        }
+                    }
+                }
             }
             else if(choice==1){  // 新建一个食物
                 char temp_food_name[100];  // 食物名称，最大长度99个字符
@@ -423,6 +487,12 @@ int main(){
                 scanf("%d",&temp_food_volume);  // 输入食物体积
                 printf("Please enter the temperature of the food");
                 scanf("%d",&temp_food_temperature);  // 输入食物保存的温度
+
+                if(temp_food_temperature < -20 || temp_food_temperature > 10){
+                    printf("Error: Temperature out of range! (-20 ~ 10)\n");
+                    continue;
+                }
+
                 if(temp_food_volume > f.frezzer_available_volume){  // 检查食物体积是否超过可用体积
                     printf("Error: The food is too large to put in the frezzer\n");
                 }
@@ -465,6 +535,10 @@ int main(){
                 else{
                     printf("Error: failed to delete food\n");
                 }
+            }
+            else if(choice==3){  // 彩蛋
+                printf("Really ?\n");
+                printf("Thankyou so much for your star and subscribe me on github !\n");
             }
             else{
                 printf("he yi wei ?\n");  // 若输入非法内容，则报错
