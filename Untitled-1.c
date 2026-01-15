@@ -219,6 +219,9 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
     }
     printf("======================================\n");
     printf("           [ Third menu ]             \n");
+    printf("\n");
+    printf(" available volume:%d    temperature:%d\n",f->frezzer_available_volume,f->frezzer_temperature);
+    printf("\n");
     printf("+-----------------+-----------------+3\n");
     
     sprintf(target_freezer_path, "%s", file_path);  // 更新target_freezer_path
@@ -291,6 +294,13 @@ int main(){
                 scanf("%d",&number);
                 sprintf(target_warehouse_path, "data/warehouse%d", number);  // 拼出目标文件夹的路径
                 menu_state=second;
+
+                struct stat st;
+                if(stat(target_warehouse_path, &st) != 0 || !S_ISDIR(st.st_mode)) {
+                    printf("Error: The warehouse does not exist\n");
+                    menu_state = first;
+                    continue; // 重新显示一级菜单
+                }
             }
             else if(choice==1){  // 新建一个文件夹
                 char temp_path[600];
@@ -301,6 +311,7 @@ int main(){
                 }
                 else{
                     printf("Failed to create a new warehouse\n");
+                    menu_state=first;
                 }
             }
             else if(choice==2){  // 删除一个文件夹
@@ -315,6 +326,7 @@ int main(){
                     DIR *dir=opendir(temp_path);  // rmdir只能删除空文件夹，故只能打开文件夹删除里面的所有文件然后再删文件夹
                     if(dir==NULL){
                         printf("The warehouse is not exist\n");
+                        menu_state=second;
                         continue;
                     }
                     for(struct dirent *temp=readdir(dir);temp!=NULL;temp=readdir(dir)){
@@ -336,7 +348,7 @@ int main(){
                 
             }
             else{
-                printf("he yi wei ?");  // 若输入非法内容，则报错
+                printf("he yi wei ?\n");  // 若输入非法内容，则报错
             }
         }
 
@@ -350,6 +362,13 @@ int main(){
                 scanf("%d",&number);
                 sprintf(target_freezer_path, "%s/frezzer%d.txt", target_warehouse_path, number);  // 拼出目标文件夹的路径
                 menu_state=third;
+                struct stat st;
+                if(stat(target_freezer_path, &st) != 0 || S_ISDIR(st.st_mode)) {
+                    printf("Error: The frezzer does not exist\n");
+                    menu_state = second;
+                    continue;  // 显示二级菜单
+                }
+                
             }
             else if(choice==1){  // 新建一个冰柜
                 char temp_path[600];
@@ -378,7 +397,7 @@ int main(){
                 }
             }
             else{
-                printf("he yi wei ?");  // 若输入非法内容，则报错
+                printf("he yi wei ?\n");  // 若输入非法内容，则报错
             }
         }
         
@@ -389,7 +408,7 @@ int main(){
             }
             else if(choice==0){  // 彩蛋
                 printf("Really ?\n");
-                printf("Thankyou so much for your star and subscribe llwwds on github !\n");
+                printf("Thankyou so much for your star and subscribe me on github !\n");
             }
             else if(choice==1){  // 新建一个食物
                 char temp_food_name[100];  // 食物名称，最大长度99个字符
@@ -424,14 +443,31 @@ int main(){
                 char temp_food_name[100];
                 scanf("%s",temp_food_name);
                 if(delete_food(&f, temp_food_name)){  //遍历单链表，若找到则删除，若找不到则输出报错内容
+
+                    FILE *file = fopen(target_freezer_path, "w");
+                    if(file == NULL) {
+                        printf("Error: Failed to update the frezzer file\n");
+                    } else {
+                    node* current = f.head;
+                while(current != NULL) {
+                    fprintf(file, "%s %s %d %d\n", 
+                       current->data.food_name, 
+                       current->data.food_type, 
+                       current->data.food_volume, 
+                       current->data.food_temperature);
+                current = current->next;
+            }
+            fclose(file);
+
                     printf("Done\n");
+        }
                 }
                 else{
                     printf("Error: failed to delete food\n");
                 }
             }
             else{
-                printf("he yi wei ?");  // 若输入非法内容，则报错
+                printf("he yi wei ?\n");  // 若输入非法内容，则报错
             }
         }
     }
