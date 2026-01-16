@@ -212,18 +212,19 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
 }
 
 void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰柜内的食物们)，传入拼好的文件路径（到每一个冰柜）
-    FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
-    if(file==NULL){
-        printf("Error: Failed to open file %s.\n",file_path);
-        menu_state=second;  // 把”当前菜单“改回二级菜单
-        return;
-    }
     printf("======================================\n");
     printf("           [ Third menu ]             \n");
     printf("\n");
     printf(" available volume:%d    temperature:%d\n",f->frezzer_available_volume,f->frezzer_temperature);
     printf("\n");
     printf("+-----------------+-----------------+3\n");
+    FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
+    if(file==NULL){
+        printf("Error: Failed to open file %s.\n",file_path);
+        menu_state=second;  // 把”当前菜单“改回二级菜单
+        return;
+    }
+    
     
     sprintf(target_freezer_path, "%s", file_path);  // 更新target_freezer_path
     
@@ -506,6 +507,11 @@ int main(){
                         fclose(file);
                         printf("Done\n");
                     }
+                    
+                    f.frezzer_available_volume -= temp_food_volume;  // 更新可用体积
+                    if(temp_food_temperature < f.frezzer_temperature){  // 及时更新温度
+                        f.frezzer_temperature = temp_food_temperature;
+                    }
                 }
             }
             else if(choice==2){  // 删除食物
@@ -520,17 +526,13 @@ int main(){
                     } else {
                     node* current = f.head;
                 while(current != NULL) {
-                    fprintf(file, "%s %s %d %d\n", 
-                       current->data.food_name, 
-                       current->data.food_type, 
-                       current->data.food_volume, 
-                       current->data.food_temperature);
-                current = current->next;
-            }
-            fclose(file);
+                    fprintf(file, "%s %s %d %d\n",current->data.food_name,current->data.food_type,current->data.food_volume,current->data.food_temperature);
+                    current = current->next;
+                }
+                fclose(file);
 
                     printf("Done\n");
-        }
+                    }
                 }
                 else{
                     printf("Error: failed to delete food\n");
@@ -544,6 +546,7 @@ int main(){
                 printf("he yi wei ?\n");  // 若输入非法内容，则报错
             }
         }
+        free_list(&f);
     }
     return 0;
 }
