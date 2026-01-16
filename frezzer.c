@@ -249,7 +249,7 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
             }
         }
         sort_food_list(f);  // 对冰柜中的食物按照体积进行 降序排序
-        f->frezzer_available_volume-=used_volume;  // 更新可用体积
+        f->frezzer_available_volume = 100 - used_volume;  // 更新可用体积，初始为100
         f->frezzer_temperature=lowest_temperature;  // 更新最低温度
 
         for(node*temp=f->head;temp!=NULL;temp=temp->next){  // 遍历链表，打印每个节点的数据
@@ -469,9 +469,14 @@ int main(){
                             }
                             fclose(file);
                             printf("Done\n");
-                        }
+                    }
+                    
+                    f.frezzer_available_volume -= new_vol;  // 更新可用体积
+                    if(new_temp < f.frezzer_temperature){  // 更新温度
+                        f.frezzer_temperature = new_temp;
                     }
                 }
+            }
             }
             else if(choice==1){  // 新建一个食物
                 char temp_food_name[100];  // 食物名称，最大长度99个字符
@@ -504,6 +509,11 @@ int main(){
                         fprintf(file, "%s %s %d %d\n", temp_food_name, temp_food_type, temp_food_volume, temp_food_temperature);// 写入食物信息到文件
                         fclose(file);
                         printf("Done\n");
+                    }
+                    
+                    f.frezzer_available_volume -= temp_food_volume;  // 更新可用体积
+                    if(temp_food_temperature < f.frezzer_temperature){  // 更新温度
+                        f.frezzer_temperature = temp_food_temperature;
                     }
                 }
             }
