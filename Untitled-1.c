@@ -113,15 +113,13 @@ void sort_food_list(frezzer *f) {  //对冰柜中的食物按照体积进行 降
     food temp_data[100];  // 暂时记录链表中全部数据
     int tag = 0;  // 临时变量，用两次
 
-    // 1. 复制链表数据到数组（无初始化）
     for (node* temp = f->head; temp != NULL; temp = temp->next) {
         temp_data[tag++] = temp->data;
     }
 
-    // 2. 用实际节点数 tag 替代固定 100
     qsort(temp_data, tag, sizeof(food), cmp);
 
-    // 3. 复制回链表
+    // 复制回链表
     tag = 0;
     for (node* temp = f->head; temp != NULL; temp = temp->next) {
         temp->data = temp_data[tag++];
@@ -507,11 +505,6 @@ int main(){
                         fclose(file);
                         printf("Done\n");
                     }
-                    
-                    f.frezzer_available_volume -= temp_food_volume;  // 更新可用体积
-                    if(temp_food_temperature < f.frezzer_temperature){  // 及时更新温度
-                        f.frezzer_temperature = temp_food_temperature;
-                    }
                 }
             }
             else if(choice==2){  // 删除食物
@@ -524,20 +517,20 @@ int main(){
                     if(file == NULL) {
                         printf("Error: Failed to update the frezzer file\n");
                     } else {
-                    node* current = f.head;
-                while(current != NULL) {
-                    fprintf(file, "%s %s %d %d\n",current->data.food_name,current->data.food_type,current->data.food_volume,current->data.food_temperature);
-                    current = current->next;
-                }
-                fclose(file);
-
-                    printf("Done\n");
+                        node* current = f.head;
+                        while(current != NULL) {
+                            fprintf(file, "%s %s %d %d\n",current->data.food_name,current->data.food_type,current->data.food_volume,current->data.food_temperature);
+                            current = current->next;
+                        }
+                        fclose(file);
+                        printf("Done\n");
                     }
                 }
                 else{
                     printf("Error: failed to delete food\n");
                 }
             }
+
             else if(choice==3){  // 彩蛋
                 printf("Really ?\n");
                 printf("Thankyou so much for your star and subscribe me on github !\n");
