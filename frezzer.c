@@ -113,13 +113,15 @@ void sort_food_list(frezzer *f) {  //对冰柜中的食物按照体积进行 降
     food temp_data[100];  // 暂时记录链表中全部数据
     int tag = 0;  // 临时变量，用两次
 
+    // 1. 复制链表数据到数组（无初始化）
     for (node* temp = f->head; temp != NULL; temp = temp->next) {
         temp_data[tag++] = temp->data;
     }
 
+    // 2. 用实际节点数 tag 替代固定 100
     qsort(temp_data, tag, sizeof(food), cmp);
 
-    // 复制回链表
+    // 3. 复制回链表
     tag = 0;
     for (node* temp = f->head; temp != NULL; temp = temp->next) {
         temp->data = temp_data[tag++];
@@ -210,19 +212,18 @@ void show_second_menu(char file_path[]){  // 显示二级菜单(仓库内的冰�
 }
 
 void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰柜内的食物们)，传入拼好的文件路径（到每一个冰柜）
-    printf("======================================\n");
-    printf("           [ Third menu ]             \n");
-    printf("\n");
-    printf(" available volume:%d    temperature:%d\n",f->frezzer_available_volume,f->frezzer_temperature);
-    printf("\n");
-    printf("+-----------------+-----------------+3\n");
     FILE *file=fopen(file_path,"r");  // 以读模式打开文件路径，新建一个文件指针file指向打开的文件用于后续操作，若失败则返回NULL
     if(file==NULL){
         printf("Error: Failed to open file %s.\n",file_path);
         menu_state=second;  // 把”当前菜单“改回二级菜单
         return;
     }
-    
+    printf("======================================\n");
+    printf("           [ Third menu ]             \n");
+    printf("\n");
+    printf(" available volume:%d    temperature:%d\n",f->frezzer_available_volume,f->frezzer_temperature);
+    printf("\n");
+    printf("+-----------------+-----------------+3\n");
     
     sprintf(target_freezer_path, "%s", file_path);  // 更新target_freezer_path
     
@@ -249,7 +250,9 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
             }
         }
         sort_food_list(f);  // 对冰柜中的食物按照体积进行 降序排序
-        f->frezzer_available_volume = 100 - used_volume;  // 更新可用体积，初始为100
+        f->frezzer_available_volume=100;
+        f->frezzer_temperature=10;
+        f->frezzer_available_volume-=used_volume;  // 更新可用体积
         f->frezzer_temperature=lowest_temperature;  // 更新最低温度
 
         for(node*temp=f->head;temp!=NULL;temp=temp->next){  // 遍历链表，打印每个节点的数据
@@ -406,6 +409,7 @@ int main(){
        if(choice==-1){  // 返回二级菜单
                 menu_state=second;
                 free_list(&f);
+                continue;
             }
             else if(choice==0){  // 修改食物信息
                 char target_name[100];
@@ -469,14 +473,10 @@ int main(){
                             }
                             fclose(file);
                             printf("Done\n");
-                    }
-                    
-                    f.frezzer_available_volume -= new_vol;  // 更新可用体积
-                    if(new_temp < f.frezzer_temperature){  // 更新温度
-                        f.frezzer_temperature = new_temp;
+                        }
                     }
                 }
-            }
+                continue;
             }
             else if(choice==1){  // 新建一个食物
                 char temp_food_name[100];  // 食物名称，最大长度99个字符
@@ -510,12 +510,8 @@ int main(){
                         fclose(file);
                         printf("Done\n");
                     }
-                    
-                    f.frezzer_available_volume -= temp_food_volume;  // 更新可用体积
-                    if(temp_food_temperature < f.frezzer_temperature){  // 更新温度
-                        f.frezzer_temperature = temp_food_temperature;
-                    }
                 }
+                continue;
             }
             else if(choice==2){  // 删除食物
                 printf("Please enter the name of the food");
@@ -527,29 +523,34 @@ int main(){
                     if(file == NULL) {
                         printf("Error: Failed to update the frezzer file\n");
                     } else {
-                        node* current = f.head;
-                        while(current != NULL) {
-                            fprintf(file, "%s %s %d %d\n",current->data.food_name,current->data.food_type,current->data.food_volume,current->data.food_temperature);
-                            current = current->next;
-                        }
-                        fclose(file);
-                        printf("Done\n");
-                    }
+                    node* current = f.head;
+                while(current != NULL) {
+                    fprintf(file, "%s %s %d %d\n", 
+                       current->data.food_name, 
+                       current->data.food_type, 
+                       current->data.food_volume, 
+                       current->data.food_temperature);
+                current = current->next;
+            }
+            fclose(file);
+
+                    printf("Done\n");
+        }
                 }
                 else{
                     printf("Error: failed to delete food\n");
                 }
+                continue;
             }
-
             else if(choice==3){  // 彩蛋
                 printf("Really ?\n");
                 printf("Thankyou so much for your star and subscribe me on github !\n");
+                continue;
             }
             else{
                 printf("he yi wei ?\n");  // 若输入非法内容，则报错
             }
         }
-        free_list(&f);
     }
     return 0;
 }
