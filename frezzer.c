@@ -103,7 +103,7 @@ void free_list(frezzer* f) {  //释放整个链表，不释放头指针（在fre
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int cmp(const void *a, const void *b) {  // qsort排序单链表用的排序函数
-    const food *food_a = a, *food_b = b;
+    const food *food_a = (food*)a, *food_b = (food*)b;
     return food_b->food_volume - food_a->food_volume; // 降序排序
 }
 
@@ -221,9 +221,7 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
     printf("======================================\n");
     printf("           [ Third menu ]             \n");
     printf("\n");
-    printf(" available volume:%d    temperature:%d\n",f->frezzer_available_volume,f->frezzer_temperature);
-    printf("\n");
-    printf("+-----------------+-----------------+3\n");
+    
     
     sprintf(target_freezer_path, "%s", file_path);  // 更新target_freezer_path
     
@@ -242,7 +240,7 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
             if(temp_vol <= f->frezzer_available_volume){  // 若食物体积小于等于可用体积
                 node* temp = create_node(f);  // 新建节点并尾插
             init_node(temp, temp_name, temp_type, temp_vol, temp_temp, NULL); // 初始化节点，将临时变量中的数据存入节点中
-
+                
                 if(lowest_temperature > temp->data.food_temperature){  // 计算最低温度
                     lowest_temperature = temp->data.food_temperature;
                 }
@@ -250,10 +248,12 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
             }
         }
         sort_food_list(f);  // 对冰柜中的食物按照体积进行 降序排序
-        f->frezzer_available_volume=100;
-        f->frezzer_temperature=10;
-        f->frezzer_available_volume-=used_volume;  // 更新可用体积
+        f->frezzer_available_volume=100-used_volume;  // 更新可用体积
         f->frezzer_temperature=lowest_temperature;  // 更新最低温度
+
+    printf(" available volume:%d    temperature:%d\n",f->frezzer_available_volume,f->frezzer_temperature);
+    printf("\n");
+    printf("+-----------------+-----------------+3\n");
 
         for(node*temp=f->head;temp!=NULL;temp=temp->next){  // 遍历链表，打印每个节点的数据
             printf("| %-18s | %-18s | %-18d | %-18d |\n",temp->data.food_name,temp->data.food_type,temp->data.food_volume,temp->data.food_temperature);
@@ -409,7 +409,6 @@ int main(){
        if(choice==-1){  // 返回二级菜单
                 menu_state=second;
                 free_list(&f);
-                continue;
             }
             else if(choice==0){  // 修改食物信息
                 char target_name[100];
@@ -476,7 +475,6 @@ int main(){
                         }
                     }
                 }
-                continue;
             }
             else if(choice==1){  // 新建一个食物
                 char temp_food_name[100];  // 食物名称，最大长度99个字符
@@ -511,7 +509,6 @@ int main(){
                         printf("Done\n");
                     }
                 }
-                continue;
             }
             else if(choice==2){  // 删除食物
                 printf("Please enter the name of the food");
@@ -530,22 +527,20 @@ int main(){
                        current->data.food_type, 
                        current->data.food_volume, 
                        current->data.food_temperature);
-                current = current->next;
-            }
-            fclose(file);
+                        current = current->next;
+                    }       
+                        fclose(file);
 
-                    printf("Done\n");
-        }
-                }
+                        printf("Done\n");
+                    }
+                } 
                 else{
                     printf("Error: failed to delete food\n");
                 }
-                continue;
             }
             else if(choice==3){  // 彩蛋
                 printf("Really ?\n");
                 printf("Thankyou so much for your star and subscribe me on github !\n");
-                continue;
             }
             else{
                 printf("he yi wei ?\n");  // 若输入非法内容，则报错
