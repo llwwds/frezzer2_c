@@ -266,7 +266,7 @@ void show_third_menu(char file_path[], frezzer *f){  // 显示三级菜单(冰�
     printf("Enter 0  to modify a food\n");
     printf("Enter 1  to add a new food\n");
     printf("Enter 2  to delete a food\n");
-    printf("Enter 3  to subscribe llwwds on github\n");
+    printf("Enter 3  to search food by type\n");
     printf("\n");
     printf("======================================\n");
 }
@@ -293,7 +293,7 @@ int main(){
             }
 
             else if(choice==0){  // 打开二级菜单
-                printf("Please enter the number");
+                printf("Please enter the number :");
                 int number;  // 承接输入的编号，稍后用于拼接
                 scanf("%d",&number);
                 sprintf(target_warehouse_path, "data/warehouse%d", number);  // 拼出目标文件夹的路径
@@ -319,7 +319,7 @@ int main(){
                 }
             }
             else if(choice==2){  // 删除一个文件夹
-                printf("Please enter the number");
+                printf("Please enter the number :");
                 int number;  // 承接输入的编号，稍后用于拼接
                 scanf("%d",&number);
                 char temp_path[600];  // 临时承接要删除的文件夹的路径
@@ -361,7 +361,7 @@ int main(){
                 menu_state=first;
             }
             else if(choice==0){  // 打开一个冰柜
-                printf("Please enter the number");
+                printf("Please enter the number :");
                 int number;  // 承接输入的编号，稍后用于拼接
                 scanf("%d",&number);
                 sprintf(target_freezer_path, "%s/frezzer%d.txt", target_warehouse_path, number);  // 拼出目标文件夹的路径
@@ -387,7 +387,7 @@ int main(){
                 }
             }
             else if(choice==2){  // 删除一个冰柜
-                printf("Please enter the number");
+                printf("Please enter the number :");
                 int number;  // 承接输入的编号，稍后用于拼接
                 scanf("%d",&number);
                 char temp_path[600];  // 临时承接要删除的冰柜路径
@@ -412,7 +412,7 @@ int main(){
             }
             else if(choice==0){  // 修改食物信息
                 char target_name[100];
-                printf("Please enter the name of the food");
+                printf("Please enter the name of the food :");
                 scanf("%s", target_name);
 
                 node* current = f.head;
@@ -433,13 +433,13 @@ int main(){
                     int new_vol;
                     int new_temp;
 
-                    printf("Please enter the new name");
+                    printf("Please enter the new name :");
                     scanf("%s", new_name);
-                    printf("Please enter the new type");
+                    printf("Please enter the new type :");
                     scanf("%s", new_type);
-                    printf("Please enter the new volume");
+                    printf("Please enter the new volume :");
                     scanf("%d", &new_vol);
-                    printf("Please enter the new temperature");
+                    printf("Please enter the new temperature :");
                     scanf("%d", &new_temp);
 
                     if(new_temp < -20 || new_temp > 10){
@@ -481,13 +481,13 @@ int main(){
                 char temp_food_type[100];  // 食物种类（如蔬菜、肉类、水果）
                 int temp_food_volume;  // 食物体积
                 int temp_food_temperature;  // 食物保存的温度
-                printf("Please enter the name of the food");
+                printf("Please enter the name of the food :");
                 scanf("%s",&temp_food_name);  // 输入食物名称
-                printf("Please enter the type of the food");
+                printf("Please enter the type of the food :");
                 scanf("%s",&temp_food_type);  // 输入食物种类
-                printf("Please enter the volume of the food");
+                printf("Please enter the volume of the food :");
                 scanf("%d",&temp_food_volume);  // 输入食物体积
-                printf("Please enter the temperature of the food");
+                printf("Please enter the temperature of the food :");
                 scanf("%d",&temp_food_temperature);  // 输入食物保存的温度
 
                 if(temp_food_temperature < -20 || temp_food_temperature > 10){
@@ -511,7 +511,7 @@ int main(){
                 }
             }
             else if(choice==2){  // 删除食物
-                printf("Please enter the name of the food");
+                printf("Please enter the name of the food :");
                 char temp_food_name[100];
                 scanf("%s",temp_food_name);
                 if(delete_food(&f, temp_food_name)){  //遍历单链表，若找到则删除，若找不到则输出报错内容
@@ -538,9 +538,38 @@ int main(){
                     printf("Error: failed to delete food\n");
                 }
             }
-            else if(choice==3){  // 彩蛋
-                printf("Really ?\n");
-                printf("Thankyou so much for your star and subscribe me on github !\n");
+            else if(choice==3){  // 查询指定类型的食物
+                char query_type[100];
+                printf("Please enter the type of the food :");
+                scanf("%s", query_type); // 用户输入要查询的类型
+
+                FILE *file = fopen(target_freezer_path, "r"); // 打开当前冰柜文件进行遍历查询
+                if(file == NULL){
+                    printf("Error: Failed to open file %s for searching.\n", target_freezer_path);
+                    // 即使出错也继续循环，让用户重新选择
+                    continue; 
+                }
+
+                int found_any = 0; // 标记是否找到了匹配的食品
+                printf("| %-15s | %-15s | %-16s | %-16s |\n", "Name", "Type", "Volume", "Temperature");
+
+                char temp_name[100];
+                char temp_type[100];
+                int temp_vol;
+                int temp_temp;
+
+                while(fscanf(file, "%s %s %d %d", temp_name, temp_type, &temp_vol, &temp_temp) == 4){  // 遍历文件中的每一行
+                    // 如果读取到的类型与查询类型匹配
+                    if(strcmp(temp_type, query_type) == 0){
+                        printf("| %-15s | %-15s | %-16d | %-16d |\n", temp_name, temp_type, temp_vol, temp_temp);
+                        found_any = 1; // 设置标记为找到
+                    }
+                }
+                fclose(file);
+                
+                if (!found_any) {
+                    printf("No foods of type '%s' were found in this frezzer.\n", query_type);
+                }
             }
             else{
                 printf("he yi wei ?\n");  // 若输入非法内容，则报错

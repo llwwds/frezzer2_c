@@ -1,2 +1,0 @@
-test test 10 0
-test test 20 -10

@@ -1,0 +1,3 @@
+apple fruit 10 0
+apple2 fruit 20 -1
+bread main 30 -2
