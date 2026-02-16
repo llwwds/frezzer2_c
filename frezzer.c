@@ -15,7 +15,7 @@ char target_freezer_path[600] = "";  // 记录当前选中的冰柜文件路径�
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
 typedef struct food {  // 食物信息
     char food_name[100];  // 食物名称，最大长度99个字符
-    char food_type[100];  // 食物种类（如蔬菜、肉类、水果）
+    char food_type[100];  // 食物种类,例：蔬菜、肉类、水果
     int food_volume;  // 食物体积
     int food_temperature;  // 食物保存的温度
 
@@ -545,7 +545,7 @@ int main(){
 
                 FILE *file = fopen(target_freezer_path, "r"); // 打开当前冰柜文件进行遍历查询
                 if(file == NULL){
-                    printf("Error: Failed to open file %s for searching.\n", target_freezer_path);
+                    printf("Error: Failed to open file %s\n", target_freezer_path);
                     // 即使出错也继续循环，让用户重新选择
                     continue; 
                 }
